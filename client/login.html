@@ -1,0 +1,41 @@
+<HTML>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Test OpenCV</title>
+</head>
+
+<body class="row align-items-center" style="background: linear-gradient(45deg,  rgba(4,4,4,1) 0%,rgba(8,71,131,1) 100%);width: 100vw;">
+    <div class="mx-auto border border-primary p-5" style="background-color: #fff; border-radius: 20px;">
+        <div id='inputVideo'>
+            <div id="container">
+                <canvas id="canvasOutput" style="height: 320px;position: fixed;width: 568px;"></canvas>
+                        <video autoplay="true" id="videoElement" style="height: 320px;width: 568px;"></video>
+            </div>
+        </div>
+        <hr>
+        <div class="progress">
+            <div id="progress" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="25" aria-valuemin="0"
+                aria-valuemax="100">0%</div>
+        </div>
+        <div id="alert" class="alert alert-success mt-5" role="alert" style="display: none;">
+            
+          </div>
+        <hr>
+        <div id="operate" class="row justify-content-center">
+            <input type="submit" id="startButton" class="btn btn-primary btn-lg mr-5" 
+                value="Start">
+            <input type="submit" id="stopButton" class="btn btn-outline-danger btn-lg" 
+                value="Stop">
+        </div><br>
+        <script src="static/recognize.js"></script>
+</body>
+
+</HTML>
