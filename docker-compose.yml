@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+    fastapi:
+        build:
+            context: .
+            dockerfile: dockerfiles/python.dockerfile
+        image: fastapi-application
+        container_name: fastapi-application
+        restart: unless-stopped
+        working_dir: /app
+        command: uvicorn server:app --reload --host 0.0.0.0 --port 8000
+        ports:
+            - "8088:8000"
+        volumes:
+            - .:/app
+        networks:
+            - fast
+
+networks:
+    fast:
+        driver: bridge

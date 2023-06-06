@@ -7,7 +7,7 @@ navigator.mediaDevices.getUserMedia({ video: { width: 426, height: 240 } }).then
 
 username = window.localStorage.getItem("username")
 
-const WS_URL = 'ws://localhost:8000/recognize';
+const WS_URL = 'wss://biometric.hello4.one/recognize';
 const FPS = 3;
 var socket;
 
