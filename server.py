@@ -11,11 +11,16 @@ import random
 
 import mediapipe as mp
 import face_recognition
+from tensorflow.keras.models import load_model
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_face = mp.solutions.face_detection
 mp_facemesh = mp.solutions.face_mesh
+
+faceClassif = cv2.CascadeClassifier('gender_model/haarcascade_frontalface_default.xml')
+model = load_model('gender_model/gender_model.h5')
+gender_ranges = ['Hombre', 'Mujer']
 
 app = FastAPI()
 app.mount("/static",StaticFiles(directory="./client/static"),name="static")
@@ -23,7 +28,7 @@ templates = Jinja2Templates(directory="./client")
 
 @app.get("/")
 def home(request:Request):
-    return templates.TemplateResponse("index.html",{"request":request})
+    return templates.TemplateResponse("detect.html",{"request":request})
 
 @app.get("/login")
 def home(request:Request):
@@ -250,6 +255,48 @@ async def recognize(websocket:WebSocket):
             #response = json.dumps({"validate":validate,"image":jpg_as_bytes})
             detect = not detect
             await websocket.send_json({"validate":validate,"image":jpg_as_bytes.decode('utf-8')})
+
+    except WebSocketDisconnect:
+        print("close")
+
+@app.websocket('/detect')
+async def capture(websocket: WebSocket):
+    output_gender = 2
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            data = json.loads(data)
+            username = data["username"]
+            base64_data = data["image"]
+            encoded_data = base64_data.split(',')[1]
+            nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = faceClassif.detectMultiScale(gray, 1.3, 5)
+            imageAux = gray.copy()
+            if len(faces) == 0:
+                output_gender = 2
+            for j,(x,y,w,h) in enumerate(faces):
+                
+                rostro = imageAux[y:y+h,x:x+w]
+                rostro = cv2.resize(rostro,(100,100),interpolation = cv2.INTER_AREA)
+                rostro = np.reshape(rostro,(rostro.shape[0],rostro.shape[1],1))
+                val = model.predict( np.array([ rostro ]) )   
+                #output_gender=gender_ranges[np.argmax(val)]
+                print(j,val)
+                index_male = val[0][0]
+                index_female = val[0][1]
+                
+                index_gender = index_female / index_male
+
+                if index_gender > 0.5:
+                    output_gender = 1
+                    color = (35,124,229)
+                else:
+                    output_gender = 0
+                    color = (133,156,27)
+            await websocket.send_json({"gender":output_gender})
 
     except WebSocketDisconnect:
         print("close")
