@@ -1,2 +1,4 @@
 .envapi
 __pycache__
+db
+rec_process

@@ -1,5 +1,5 @@
 const video = document.querySelector('video');
-
+video.style.transform = "scaleX(-1)"
 // request access to webcam
 navigator.mediaDevices.getUserMedia({ video: { width: 426, height: 240 } }).then((stream) => video.srcObject = stream);
 
@@ -7,16 +7,19 @@ navigator.mediaDevices.getUserMedia({ video: { width: 426, height: 240 } }).then
 
 username = window.localStorage.getItem("username")
 
-const WS_URL = 'wss://biometric.hello4.one/detect';
-//const WS_URL = 'ws://192.168.100.37:8000/detect';
+//const WS_URL = 'wss://biometric.hello4.one/detect';
+const WS_URL = 'ws://192.168.100.37:8000/detect';
 const FPS = 3;
 var socket;
 
 var progress = document.getElementById("progress")
 var al = document.getElementById("alert")
 const images = ["./static/cocacola.jpg","./static/fanta.jpg","./static/sprite.jpg"]
+const imagesD = ["./static/heineken.jpg","./static/stayfree.png"]
 var body = document.body;
 body.style.backgroundImage = `url(${images[2]})`
+body.style.backgroundRepeat = 'no-repeat';
+body.style.backgroundSize = 'cover'
 
 
 var emit;
@@ -39,19 +42,24 @@ function initSocket() {
     }
     socket.onmessage = function (event) {
         var data = JSON.parse(event.data);
-        const {gender} = data
-        if(cont === 0){
-            genderDet = gender;
-            body.style.backgroundImage = `url(${images[gender]})`
-            console.log(gArrray[genderDet]);
-            cont = cont + 1
+        const {gender,detect} = data
+        console.log(data);
+        if(detect.detect){
+            body.style.backgroundImage = `url(${imagesD[detect.index]})`
         }else{
-            if(genderDet !== gender){
-                cont = cont + 1;
+            if(cont === 0){
+                genderDet = gender;
+                body.style.backgroundImage = `url(${images[gender]})`
+                console.log(gArrray[genderDet]);
+                cont = cont + 1
+            }else{
+                if(genderDet !== gender){
+                    cont = cont + 1;
+                }
             }
-        }
-        if(cont === 20){
-            cont = 0
+            if(cont === 20){
+                cont = 0
+            }
         }
         /*var image = new Image();
         image.onload = function () {
