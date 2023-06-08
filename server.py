@@ -21,6 +21,9 @@ mp_facemesh = mp.solutions.face_mesh
 faceClassif = cv2.CascadeClassifier('gender_model/haarcascade_frontalface_default.xml')
 model = load_model('gender_model/gender_model.h5')
 gender_ranges = ['Hombre', 'Mujer']
+imagePaths = ['Isaac', 'JC']
+face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+face_recognizer.read('modeloLBPHFace.xml')
 
 app = FastAPI()
 app.mount("/static",StaticFiles(directory="./client/static"),name="static")
@@ -275,28 +278,34 @@ async def capture(websocket: WebSocket):
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             faces = faceClassif.detectMultiScale(gray, 1.3, 5)
             imageAux = gray.copy()
+            auxFrame = gray.copy()
             if len(faces) == 0:
                 output_gender = 2
             for j,(x,y,w,h) in enumerate(faces):
+                rostro_fd = auxFrame[y:y+h,x:x+w]
+                rostro_fd = cv2.resize(rostro_fd,(150,150),interpolation= cv2.INTER_CUBIC)
+                result = face_recognizer.predict(rostro_fd)
                 
-                rostro = imageAux[y:y+h,x:x+w]
-                rostro = cv2.resize(rostro,(100,100),interpolation = cv2.INTER_AREA)
-                rostro = np.reshape(rostro,(rostro.shape[0],rostro.shape[1],1))
-                val = model.predict( np.array([ rostro ]) )   
-                #output_gender=gender_ranges[np.argmax(val)]
-                print(j,val)
-                index_male = val[0][0]
-                index_female = val[0][1]
-                
-                index_gender = index_female / index_male
-
-                if index_gender > 0.5:
-                    output_gender = 1
-                    color = (35,124,229)
+                if result[1] < 70:
+                    detect = {"detect":True,"index":result[0]}
                 else:
-                    output_gender = 0
-                    color = (133,156,27)
-            await websocket.send_json({"gender":output_gender})
+                    detect = {"detect":False,"index":""}
+                    rostro = imageAux[y:y+h,x:x+w]
+                    rostro = cv2.resize(rostro,(100,100),interpolation = cv2.INTER_AREA)
+                    rostro = np.reshape(rostro,(rostro.shape[0],rostro.shape[1],1))
+                    val = model.predict( np.array([ rostro ]) )   
+                    #output_gender=gender_ranges[np.argmax(val)]
+                    index_male = val[0][0]
+                    index_female = val[0][1]
+                    
+                    index_gender = index_female / index_male
+
+                    if index_gender > 0.5:
+                        output_gender = 1
+                    else:
+                        output_gender = 0
+                    
+            await websocket.send_json({"gender":output_gender,"detect":detect})
 
     except WebSocketDisconnect:
         print("close")
